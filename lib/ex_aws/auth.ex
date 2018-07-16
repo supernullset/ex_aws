@@ -262,7 +262,10 @@ defmodule ExAws.Auth do
     base = [{"host", authority}]
 
     base = unless query_params == [] do
-      canonical_headers(base ++ query_params)
+      signed_query_params = query_params
+      |> filter_s3_request_overide_params
+
+      canonical_headers(base ++ signed_query_params)
     else
       base
     end
@@ -272,6 +275,23 @@ defmodule ExAws.Auth do
     else
       base
     end
+  end
+
+  @doc """
+  S3 has a set of query params that are overrides and do not require signing
+  https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html#RESTObjectGET-requests-request-parameters
+
+  I do not love that this is where I can bleed this "exceptional" circumstance through, but I am not sure where else I can put it
+  """
+  def filter_s3_request_overide_params(params) do
+    Enum.filter(params, & &1 not in ~w(
+	  response-content-type
+	  response-content-language
+	  response-expires
+	  response-cache-control
+	  response-content-disposition
+	  response-content-encoding
+	))
   end
 
   defp build_amz_query_params(service, datetime, config, headers, expires) do
