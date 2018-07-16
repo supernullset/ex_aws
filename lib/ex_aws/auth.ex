@@ -284,14 +284,15 @@ defmodule ExAws.Auth do
   I do not love that this is where I can bleed this "exceptional" circumstance through, but I am not sure where else I can put it
   """
   def filter_s3_request_overide_params(params) do
-    Enum.filter(params, & &1 not in ~w(
+    Enum.filter(params, fn {k, _v} -> k not in ~w(
 	  response-content-type
 	  response-content-language
 	  response-expires
 	  response-cache-control
 	  response-content-disposition
 	  response-content-encoding
-	))
+	)a
+    end)
   end
 
   defp build_amz_query_params(service, datetime, config, headers, expires) do
